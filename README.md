@@ -19,6 +19,8 @@ This check is an enhanced version of the "Usage of APIs" Check (see [SAP Note 35
 - [📝 How-To Guide for the ATC Check Installation](https://github.com/SAP/project-kernseife/wiki/ABAP-Installation-Guide)
 - [🌐 How-To Guide for the BTP App Installation](https://github.com/SAP/project-kernseife/wiki/BTP-Installation-Guide)
 
+*Note*: we migrated all the guides to the [Github Wiki](https://github.com/SAP/project-kernseife/wiki) for easier maintenance.
+
 ## 🤲 Contributing
 
 Please refer to our [Contribution Guidelines](CONTRIBUTING.md). 
