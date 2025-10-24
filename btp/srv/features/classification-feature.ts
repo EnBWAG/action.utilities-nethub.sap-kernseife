@@ -335,6 +335,9 @@ const getDefaultRatingCode = (classification: Classification) => {
     case 'TYPE':
     case 'ACID':
       return determineRatingPrefix(classification, '3');
+    case 'TRAN':
+      // Code Usage of Transactions is never a good sign
+      return determineRatingPrefix(classification, '9');
     case 'CLAS':
       if (
         classification.objectName?.startsWith('CX_') ||
