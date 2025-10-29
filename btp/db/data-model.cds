@@ -790,7 +790,7 @@ entity DevelopmentObjectsAggregated as
         key s.refObjectType,
         key s.objectName,
         key s.objectType,
-            s.messageId          as code,
+        key s.messageId          as code,
             r.score              as score,
             r.criticality        as criticality,
             count( * )           as count           : Integer,
