@@ -39,15 +39,13 @@ sap.ui.define(
       };
 
       const setFileEndings = function (fileEndings) {
-          console.log('File Endings:', fileEndings);
+        console.log('File Endings:', fileEndings);
         const oFileUploader = byId('uploader');
         if (fileEndings) {
-          const fileTypes = fileEndings
-            .split(',')
-            .map(function (sFileEnding) {
-              return sFileEnding.trim();
-            });
-            console.log('File types:', fileTypes);
+          const fileTypes = fileEndings.split(',').map(function (sFileEnding) {
+            return sFileEnding.trim();
+          });
+          console.log('File types:', fileTypes);
           oFileUploader.setFileType(fileTypes);
         } else {
           oFileUploader.setFileType([]);
@@ -61,6 +59,7 @@ sap.ui.define(
           .getBindingContext()
           .getObject().reqSystemId;
         setFieldVisibility('systemId', showSystemId);
+
         const showDefaultRating = oEvent
           .getParameter('selectedItem')
           .getBindingContext()
@@ -72,6 +71,12 @@ sap.ui.define(
           .getBindingContext()
           .getObject().comment;
         setFieldVisibility('comment', showComment);
+
+        const showOverwrite = oEvent
+          .getParameter('selectedItem')
+          .getBindingContext()
+          .getObject().overwrite;
+        setFieldVisibility('overwrite', showOverwrite);
 
         setFieldVisibility('uploader', true);
 
@@ -90,6 +95,7 @@ sap.ui.define(
 
           setFieldVisibility('systemId', false);
           setFieldVisibility('defaultRating', false);
+          setFieldVisibility('overwrite', false);
           setFieldVisibility('comment', false);
           setFieldVisibility('uploader', false);
           setFileEndings('');
@@ -137,6 +143,11 @@ sap.ui.define(
           defaultRating.setName('X-Default-Rating');
           defaultRating.setValue(byId('defaultRating').getSelectedKey());
           oFileUploader.addHeaderParameter(defaultRating);
+
+          const overwrite = new FileUploaderParameter();
+          overwrite.setName('X-Overwrite');
+          overwrite.setValue(byId('overwrite').getSelected());
+          oFileUploader.addHeaderParameter(overwrite);
 
           const comment = new FileUploaderParameter();
           comment.setName('X-Comment');

@@ -10,6 +10,7 @@ const createImport = async (
   fileType: string,
   systemId: string | undefined | null = undefined,
   defaultRating: string | undefined = undefined,
+  overwite: boolean | undefined = undefined,  
   comment: string | undefined = undefined
 ): Promise<string> => {
   const importObject = {
@@ -19,6 +20,7 @@ const createImport = async (
     status: 'NEW',
     systemId,
     defaultRating,
+    overwite,
     comment,
     file,
     fileType
@@ -29,18 +31,27 @@ const createImport = async (
   return importObject.ID as string;
 };
 
+export const setJobIdForImport = async (
+  importId: string,
+  jobId: string
+) => {
+  await UPDATE(entities.Imports, { ID: importId }).set({ job_ID: jobId });
+};
+
 export const uploadFile = async (
   importType: string,
   fileName: string,
   file: any,
   systemId: string | undefined | null,
   defaultRating?: string,
+  overwrite?: boolean,
   comment?: string
 ): Promise<string> => {
   LOG.info('Uploading file', {
     fileName: fileName,
     type: importType,
     defaultRating,
+    overwrite,
     systemId,
     comment
   });
@@ -54,15 +65,7 @@ export const uploadFile = async (
       if (!systemId) {
         throw new Error('No SystemId provided');
       }
-      return await createImport(
-        importType,
-        fileName,
-        file,
-        'application/csv',
-        systemId,
-        defaultRating,
-        comment
-      );
+      break;
     case 'MISSING_CLASSIFICATION':
       break;
     case 'ENHANCEMENT':
@@ -82,6 +85,7 @@ export const uploadFile = async (
     fileType,
     systemId,
     defaultRating,
+    overwrite,
     comment
   );
 };

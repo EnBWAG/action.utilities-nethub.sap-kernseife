@@ -34,7 +34,7 @@ import {
   updateClassificationsFromReleaseStates
 } from './features/releaseState-feature';
 import { createInitialData, setupSystem } from './features/setup-feature';
-import { uploadFile } from './features/upload-feature';
+import { setJobIdForImport, uploadFile } from './features/upload-feature';
 import JSZip from 'jszip';
 import { handleMessage, updateDestinations } from './lib/connectivity';
 
@@ -48,6 +48,7 @@ export default (srv: Service) => {
     const fileName = req.headers['x-file-name'];
     const systemId = req.headers['x-system-id'];
     const defaultRating = req.headers['x-default-rating'];
+    const overwrite = req.headers['x-overwrite'] === 'true';
     const comment = req.headers['x-comment'];
 
     const stream = new PassThrough();
@@ -67,6 +68,7 @@ export default (srv: Service) => {
               buffer,
               systemId,
               defaultRating,
+              overwrite,
               comment
             )
           );
@@ -174,7 +176,7 @@ export default (srv: Service) => {
     const type = msg.data.type;
     LOG.info(`Imported ${ID} ${type}`);
 
-    await runAsJob(
+    const jobId = await runAsJob(
       `Import ${type}`,
       `IMPORT_${type}` as JobType,
       100,
@@ -232,6 +234,8 @@ export default (srv: Service) => {
         }
       }
     );
+
+    await setJobIdForImport(ID, jobId);
   });
 
   srv.on('recalculateScore', async (req) => {

@@ -246,7 +246,6 @@ export const updateSimplifications = async (classification: Classification) => {
     classification_objectName: classification.objectName,
     classification_objectType: classification.objectType
   });
-  // await INSERT.into(entities.Notes).entries(notes);
 
   classification.noteList = notes;
   classification.numberOfSimplificationNotes = notes.length;
@@ -1427,7 +1426,8 @@ export const assignSuccessorByRef = async (
 const importClassification = async (
   classificationImport: ClassificationImport,
   classificationSet: Set<string>,
-  releaseStateMap: Map<string, ReleaseState>
+  releaseStateMap: Map<string, ReleaseState>,
+  overwite: boolean = false
 ): Promise<ClassificationImportLog> => {
   // Check if Classification already exists
   const classificationKey = getClassificationKey(classificationImport);
@@ -1503,70 +1503,35 @@ const importClassification = async (
     const oldRatingCode = existingClassification.rating_code;
     const oldSuccessorClassification =
       existingClassification.successorClassification_code;
+
+    const oldSuccessorCount = existingClassification.successorList?.length || 0;
     if (existingClassification.rating_code != classificationImport.rating) {
-      existingClassification.rating_code = classificationImport.rating!;
-      updated = true;
-    }
-    // Merge Successors
-    switch (classificationImport.successorClassification) {
-      case 'STANDARD':
-        if (existingClassification.successorClassification_code == 'CUSTOM') {
-          conflict = true;
-        } else if (
-          !existingClassification.successorClassification_code ||
-          existingClassification.successorClassification_code == 'undefined'
-        ) {
-          existingClassification.successorClassification_code = 'STANDARD';
-          updated = true;
-          // Merge Successor List
-          for (const successor of classificationImport.successorList) {
-            // Check if successor already exists
-            const existingSuccessor = existingClassification.successorList.find(
-              (s: any) =>
-                s.tadirObjectType == successor.tadirObjectType &&
-                s.tadirObjectName == successor.tadirObjectName &&
-                s.objectType == successor.objectType &&
-                s.objectName == successor.objectName
-            );
-            if (!existingSuccessor) {
-              existingClassification.successorList.push({
-                ID: utils.uuid(),
-                tadirObjectType: successor.tadirObjectType,
-                tadirObjectName: successor.tadirObjectName,
-                objectType: successor.objectType,
-                objectName: successor.objectName,
-                successorType_code: 'STANDARD'
-              });
-            }
-          }
-        }
-        break;
-      case 'CUSTOM':
-        if (existingClassification.successorClassification_code == 'STANDARD') {
-          conflict = true;
-        } else if (
-          !existingClassification.successorClassification_code ||
-          existingClassification.successorClassification_code == 'undefined'
-        ) {
-          existingClassification.successorClassification_code = 'CUSTOM';
-          updated = true;
-          // Override Successor List
-          existingClassification.successorList =
-            classificationImport.successorList.map((successor) => ({
-              ID: utils.uuid(),
-              tadirObjectType: successor.tadirObjectType,
-              tadirObjectName: successor.tadirObjectName,
-              objectType: successor.objectType,
-              objectName: successor.objectName,
-              successorType_code: successor.successorType || 'DIRECT'
-            }));
-        }
-        break;
-      default:
-        // Leave Successor Classification as is
-        break;
+      if (overwite) {
+        existingClassification.rating_code = classificationImport.rating!;
+        updated = true;
+      }
+      conflict = true;
     }
 
+    if (
+      classificationImport.successorClassification !=
+      existingClassification.successorClassification_code
+    ) {
+      conflict = true;
+      if (overwite) {
+        // Override Successor List
+        existingClassification.successorList =
+          classificationImport.successorList.map((successor) => ({
+            ID: utils.uuid(),
+            tadirObjectType: successor.tadirObjectType,
+            tadirObjectName: successor.tadirObjectName,
+            objectType: successor.objectType,
+            objectName: successor.objectName,
+            successorType_code: successor.successorType || 'DIRECT'
+          }));
+        updated = true;
+      }
+    }
     if (conflict) {
       return {
         tadirObjectType: existingClassification.tadirObjectType as string,
@@ -1578,7 +1543,9 @@ const importClassification = async (
         oldSuccessorClassification: oldSuccessorClassification,
         newSuccessorClassification:
           existingClassification.successorClassification_code as string,
-        status: 'CONFLICT'
+        oldSuccessorCount: oldSuccessorCount || 0,
+        newSuccessorCount: existingClassification.successorList?.length || 0,
+        status: overwite ? 'OVERWRITTEN' : 'CONFLICT'
       } as ClassificationImportLog;
     } else if (updated) {
       // Update DB
@@ -1599,6 +1566,8 @@ const importClassification = async (
         oldSuccessorClassification: oldSuccessorClassification,
         newSuccessorClassification:
           existingClassification.successorClassification_code as string,
+        oldSuccessorCount: oldSuccessorCount || 0,
+        newSuccessorCount: existingClassification.successorList?.length || 0,
         status: 'UPDATED'
       } as ClassificationImportLog;
     } else {
@@ -1613,6 +1582,8 @@ const importClassification = async (
         oldSuccessorClassification: oldSuccessorClassification,
         newSuccessorClassification:
           existingClassification.successorClassification_code as string,
+        oldSuccessorCount: oldSuccessorCount || 0,
+        newSuccessorCount: existingClassification.successorList?.length || 0,
         status: 'UNCHANGED'
       } as ClassificationImportLog;
     }
@@ -1627,7 +1598,7 @@ export const importGithubClassificationById = async (
   // Unzip the file
   const githubImport = await SELECT.one
     .from(entities.Imports, (d: any) => {
-      d.ID, d.status, d.title, d.file, d.systemId;
+      d.ID, d.status, d.title, d.file, d.systemId, d.overwrite;
     })
     .where({ ID: classificationImportId });
   const zip = new JSZip();
@@ -1654,7 +1625,8 @@ export const importGithubClassificationById = async (
       const importLog = await importClassification(
         classification,
         classificationSet,
-        releaseStateMap
+        releaseStateMap,
+        githubImport.overwrite || false
       );
       importLogList.push(importLog);
       processIndex++;

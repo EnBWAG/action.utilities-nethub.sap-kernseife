@@ -16,13 +16,8 @@ annotate service.Imports with @(
         },
         {
             $Type            : 'UI.DataField',
-            Label            : '{i18n>systemId}',
-            Value            : systemId,
-            ![@UI.Importance]: #Medium,
-        },
-        {
-            $Type            : 'UI.DataField',
-            Value            : createdBy,
+            Label            : '{i18n>jobStatus}',
+            Value            : job.status,
             ![@UI.Importance]: #Medium,
         },
         {
@@ -35,7 +30,8 @@ annotate service.Imports with @(
         $Type              : 'UI.SelectionPresentationVariantType',
         PresentationVariant: {
             $Type         : 'UI.PresentationVariantType',
-            Visualizations: ['@UI.LineItem', ],
+            Visualizations: ['@UI.LineItem',
+            ],
             SortOrder     : [{
                 $Type     : 'Common.SortOrderType',
                 Property  : createdAt,
@@ -47,6 +43,38 @@ annotate service.Imports with @(
             SelectOptions: [],
         },
     },
+    UI.HeaderFacets : [
+        {
+            $Type : 'UI.ReferenceFacet',
+            Label : '{i18n>generalInformation}',
+            ID : 'generalInformation',
+            Target : '@UI.FieldGroup#generalInformation',
+        },
+        {
+            $Type : 'UI.ReferenceFacet',
+            ID : 'progressCurrent',
+            Target : 'job/@UI.DataPoint#progress',
+        },
+    ],
+    UI.FieldGroup #generalInformation : {
+        $Type : 'UI.FieldGroupType',
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Value : createdAt,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : file,
+                Label : '{i18n>file}',
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : status,
+                Label : '{i18n>status}',
+            },
+        ],
+    },
 );
 
 annotate service.Imports with @(UI.HeaderInfo: {
@@ -57,3 +85,20 @@ annotate service.Imports with @(UI.HeaderInfo: {
     TypeName      : '{i18n>import}',
     TypeNamePlural: '{i18n>imports}',
 });
+annotate service.Jobs with @(
+    UI.DataPoint #progress : {
+        $Type : 'UI.DataPointType',
+        Value : progressCurrent,
+        Title : '{i18n>progress}',
+        TargetValue : progressTotal,
+        Visualization : #Progress,
+    },
+    UI.DataPoint #progress1 : {
+        $Type : 'UI.DataPointType',
+        Value : progressTotal,
+        Title : 'progressTotal',
+        TargetValue : 100,
+        Visualization : #Progress,
+    },
+);
+

@@ -488,9 +488,14 @@ entity Imports : cuid, managed {
     status        : String;
     systemId      : String;
     comment       : String;
+    overwrite     : Boolean default false;
     defaultRating : String(3);
     system        : Association to Systems
                         on system.sid = $self.systemId;
+
+    job_ID        : type of Jobs : ID;
+    job           : Association to Jobs
+                        on job.ID = $self.job_ID;
 
     @Core.MediaType: fileType
     file          : LargeBinary;
@@ -1050,6 +1055,7 @@ entity ImportTypes {
         reqSystemId   : Boolean;
         defaultRating : Boolean;
         comment       : Boolean;
+        overwrite     : Boolean;
         fileEndings   : String;
         hidden        : Boolean;
 }

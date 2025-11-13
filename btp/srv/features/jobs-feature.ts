@@ -1,4 +1,4 @@
-import { JobType } from '#cds-models/kernseife/db';
+import { Job, JobType } from '#cds-models/kernseife/db';
 import cds from '@sap/cds';
 import { JobResult } from '../types/file';
 
@@ -35,7 +35,7 @@ export const updateJobProgress = async (
 
 export const finishJob = async (id: string, result?: JobResult) => {
   LOG.info('Job Finished ' + id);
-  const job = { status: 'SUCCESS' };
+  const job = { status: 'SUCCESS' } as Job;
   if (result && result.file && result.fileType) {
     job['file'] = result.file;
     job['fileType'] = result.fileType;
@@ -44,7 +44,7 @@ export const finishJob = async (id: string, result?: JobResult) => {
   await UPDATE(cds.entities.Jobs, { ID: id }).set(job);
 };
 
-export const failJob = async (id: string, err) => {
+export const failJob = async (id: string, err: any) => {
   LOG.error('Job Failed: ' + id, err);
   await UPDATE(cds.entities.Jobs, { ID: id }).with({ status: 'ERROR' });
 };
@@ -80,4 +80,6 @@ export const runAsJob = async (
       await failJob(jobId, err);
       if (errorHandler) await errorHandler();
     });
+
+    return jobId;
 };
