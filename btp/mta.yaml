@@ -22,6 +22,8 @@ modules:
       buildpack: nodejs_buildpack
       memory: 2GB
       disk-quota: 1GB
+    properties:
+      OPTIMIZE_MEMORY: true
     build-parameters:
       builder: custom
       commands: []
