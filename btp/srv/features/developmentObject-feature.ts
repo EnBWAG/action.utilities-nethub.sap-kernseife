@@ -338,10 +338,6 @@ export const importFinding = async (
         namespace: ''
       } as DevelopmentObject;
 
-      if (developmentObject.objectName == 'Z_VC_FUNC') {
-        LOG.info('Importing Development Object', { developmentObject });
-      }
-
       const { score, potentialScore, level, potentialLevel } =
         await calculateScoreAndLevel(developmentObject);
       developmentObject.potentialScore = potentialScore;
